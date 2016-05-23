@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/opspluslove/ansible-clj-services.svg?branch=master)](https://travis-ci.org/opspluslove/ansible-clj-services)
+
 clj-services
 =========
 
