@@ -1,0 +1,69 @@
+---
+- name: Build uberjar in local machine (boot-clj)
+  local_action:
+    module: command {{ item.build_command | default("boot build") }}
+    args:
+      chdir: "{{ item.local_directory }}"
+  when: item.boot_clj is defined and item.boot_clj
+  with_items: "{{ clj_services }}"
+
+- name: Build uberjar in local machine (leiningen)
+  local_action:
+    module: command {{ item.build_command | default("lein build") }}
+    args:
+      chdir: "{{ item.local_directory }}"
+  when: item.leiningen is defined and item.leiningen
+  with_items: "{{ clj_services }}"
+
+- name: Ensure project directory exists
+  file:
+    path: "/home/{{ item.user }}/{{ item.name }}/"
+    state: directory
+    owner: "{{ item.user }}"
+  with_items: "{{ clj_services }}"
+
+- name: Copy uberjar to project directory
+  copy:
+    src: "{{ item.local_directory }}/{{ item.uberjar_path }}"
+    dest: "/home/{{ item.user }}/{{ item.name }}/project.jar"
+  remote_user: "{{ item.user }}"
+  notify: Restart {{ item.name }} service
+  with_items: "{{ clj_services }}"
+
+- name: Install environment variables
+  template:
+    src: ENVS
+    dest: /home/{{ item.user }}/{{ item.name }}/ENVS
+    owner: "{{ item.user }}"
+  remote_user: "{{ item.user }}"
+  notify: Restart {{ item.name }} service
+  when: item.envs is defined
+  with_items: "{{ clj_services }}"
+
+- name: Ensure systemd directory for unit files exists
+  file:
+    state: directory
+    path: "{{ systemd_local_services_path }}"
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Install systemd unit file
+  template:
+    src: clj-service.service
+    dest: "{{ systemd_local_services_path }}/{{ item.name }}.service"
+    owner: root
+    group: root
+    mode: 0644
+  notify: Restart {{ item.name }} service
+  with_items: "{{ clj_services }}"
+
+- name: Ensure services are started and enabled
+  service: name={{ item.name }} state=started enabled=yes
+  when: item.enabled is defined and item.enabled
+  with_items: "{{ clj_services }}"
+
+- name: Ensure disabled services are stopped and disabled
+  service: name={{ item.name }} state=stopped enabled=no
+  when: item.enabled is defined and not item.enabled
+  with_items: "{{ clj_services }}"

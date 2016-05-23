@@ -1,0 +1,26 @@
+# {{ systemd_local_services_path }}/{{ item.name }}.service
+[Unit]
+Description={{ item.description }}
+
+[Service]
+User={{ item.user }}
+WorkingDirectory=/home/{{ item.user }}/{{ item.name }}
+
+ExecStart=/usr/bin/java -jar project.jar
+{% if item.get("service", {}).type is defined %}
+Type={{ item.get("service", {}).type }}
+{% endif %}
+
+Restart={{ item.get("service", {}).restart | default("always")}}
+StandardInput={{ item.get("service", {}).stdin | default("null") }}
+StandardOutput={{ item.get("service", {}).stdout | default("syslog") }}
+StandardError={{ item.get("service", {}).stderr | default("syslog") }}
+SyslogIdentifier={{ item.get("service", {}).syslog_identifier | default("\"%n\"") }}
+KillMode=process
+
+{% if item.envs is defined %}
+EnvironmentFile=/home/{{ item.user }}/{{ item.name }}/ENVS
+{% endif %}
+
+[Install]
+WantedBy=multi-user.target
