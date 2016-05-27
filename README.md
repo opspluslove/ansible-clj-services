@@ -3,6 +3,15 @@
 clj-services
 =========
 
+In your [requirements file](https://galaxy.ansible.com/intro):
+
+```
+- src: opspluslove.clj-services
+  version: v1.0.1
+```
+
+----
+
 Ansible role to deploy and install clojure services.
 
 This role is a bit specific. It builds an uberjar on the local machine (the one running ansible) then push it to the remote and setup a systemd service to run it.
