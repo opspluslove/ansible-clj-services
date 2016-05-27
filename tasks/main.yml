@@ -1,18 +1,9 @@
 ---
-- name: Build uberjar in local machine (boot-clj)
+- name: Build uberjar in local machine
   local_action:
-    module: command {{ item.build_command | default("boot build") }}
+    module: command {{ item.build_command | mandatory }}
     args:
       chdir: "{{ item.local_directory }}"
-  when: item.boot_clj is defined and item.boot_clj
-  with_items: "{{ clj_services }}"
-
-- name: Build uberjar in local machine (leiningen)
-  local_action:
-    module: command {{ item.build_command | default("lein build") }}
-    args:
-      chdir: "{{ item.local_directory }}"
-  when: item.leiningen is defined and item.leiningen
   with_items: "{{ clj_services }}"
 
 - name: Ensure project directory exists
